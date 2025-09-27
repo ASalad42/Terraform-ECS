@@ -1,0 +1,61 @@
+name: Terraform Plan & Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Terraform environment (test, staging, prod)'
+        required: true
+        default: 'test'
+
+env:
+  AWS_REGION: eu-west-1
+  TERRAFORM_ENV_DIR: terraform/environments/${{ github.event.inputs.environment }}
+  TFVARS_S3_KEY: ecs/${{ github.event.inputs.environment }}/terraform.tfvars
+  TFVARS_LOCAL_PATH: terraform/environments/${{ github.event.inputs.environment }}/terraform.tfvars
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download tfvars file from S3
+        run: aws s3 cp s3://devops/${{ env.TFVARS_S3_KEY }} ${{ env.TFVARS_LOCAL_PATH }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -diff -recursive
+
+      - name: Install and Run TFLint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          tflint --version
+          tflint --init
+          tflint
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ${{ env.TERRAFORM_ENV_DIR }}
+
+      - name: Terraform Plan
+        run: terraform plan -var-file="terraform.tfvars"
+        working-directory: ${{ env.TERRAFORM_ENV_DIR }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var-file="terraform.tfvars"
+        working-directory: ${{ env.TERRAFORM_ENV_DIR }}
+
+      - name: Summary
+        run: echo "### ✅ Terraform Plan & Apply Completed" >> $GITHUB_STEP_SUMMARY

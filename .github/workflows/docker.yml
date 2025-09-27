@@ -1,0 +1,68 @@
+name: Docker Build & Push
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - prod
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: frontend
+      ECR_URI: ${{ secrets.ECR_URI_FRONTEND }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Determine Docker tag based on branch
+        id: vars
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "TAG=test" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
+            echo "TAG=staging" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == "prod" ]]; then
+            echo "TAG=prod" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build frontend Docker image
+        run: |
+          docker build -t $IMAGE_NAME:${{ github.sha }} ./frontend
+          docker tag $IMAGE_NAME:${{ github.sha }} $ECR_URI:${{ steps.vars.outputs.TAG }}
+          docker tag $IMAGE_NAME:${{ github.sha }} $ECR_URI:${{ steps.vars.outputs.TAG }}-${{ github.sha }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+          | docker login --username AWS --password-stdin $ECR_URI
+
+      - name: Push frontend images
+        run: |
+          docker push $ECR_URI:${{ steps.vars.outputs.TAG }}
+          docker push $ECR_URI:${{ steps.vars.outputs.TAG }}-${{ github.sha }}
