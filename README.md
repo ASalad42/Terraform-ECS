@@ -1,4 +1,7 @@
-# Simple Node.js frontend app running on ECS via CI/CD Pipeline
+# Simple Node.js frontend app running on ECS via Terraform
+
+<img width="1486" height="307" alt="ecs" src="https://github.com/user-attachments/assets/1004d677-9610-4821-b579-5092af6721ad" />
+
 
 ```txt
 Client Browser (HTTPS:443)
