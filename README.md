@@ -69,8 +69,9 @@ CICD:
 | `workflow_dispatch` input: `environment = staging` | `terraform/environments/staging` | `terraform/environments/staging/terraform.tfvars` | `s3://devops/ecs/staging/terraform.tfstate` |
 | `workflow_dispatch` input: `environment = prod`    | `terraform/environments/prod`    | `terraform/environments/prod/terraform.tfvars`    | `s3://devops/ecs/prod/terraform.tfstate`    |
 
-<img width="1903" height="847" alt="image" src="https://github.com/user-attachments/assets/3f9cd711-a117-45f5-aeec-126860bdf874" />
 <img width="1896" height="847" alt="image" src="https://github.com/user-attachments/assets/807828eb-731c-4a32-87d8-3cd5108f11f5" />
+<img width="1903" height="847" alt="image" src="https://github.com/user-attachments/assets/3f9cd711-a117-45f5-aeec-126860bdf874" />
+<img width="685" height="212" alt="image" src="https://github.com/user-attachments/assets/ef25c5c8-4d02-421b-8fb3-58af5120fcba" />
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/5aa1520a-1665-421a-be21-5448edfe02f3" />
 <img width="1833" height="542" alt="image" src="https://github.com/user-attachments/assets/d89992e1-3dd0-4ffd-b64f-b6622938615b" />
 <img width="1627" height="411" alt="image" src="https://github.com/user-attachments/assets/0a0f69e3-78bc-451e-b41a-ce913593042e" />
